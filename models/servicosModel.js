@@ -1,61 +1,45 @@
-const db = require('../config/db');
+const { DataTypes, Model } = require('sequelize');
+const sequelize = require('../config/db');
 
-const Servicos = {
-    create: (servicos, callback) => {
-        const query = 'INSERT INTO servicos (nome, descricao, preco, quantidade, categoria) VALUES (?, ?, ?, ?, ?)';
-        db.query(query, [servicos.nome, servicos.descricao, servicos.preco, servicos.quantidade, servicos.categoria], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results.insertId);
-        });
-    },
+class Servicos extends Model {
+  static associate(models) {
+    Servicos.belongsTo(models.Categoria, {
+      foreignKey: 'categoria',  // nome da chave estrangeira no banco
+      as: 'categoriaServico',
+    });
+  }
+}
 
-    findById: (id, callback) => {
-        const query = 'SELECT servicos.*, categorias.nome AS categoria_nome FROM servicos JOIN categorias ON servicos.categoria = categorias.id WHERE servicos.id = ?';
-        db.query(query, [id], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results[0]);
-        });
-    },
-
-    update: (id, servicos, callback) => {
-        const query = 'UPDATE servicos SET nome = ?, preco = ?, descricao = ?, quantidade = ?, categoria = ? WHERE id = ?';
-        db.query(query, [servicos.nome, servicos.preco, servicos.descricao, servicos.quantidade, servicos.categoria, id], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results);
-        });
-    },
-
-    delete: (id, callback) => {
-        const query = 'DELETE FROM servicos WHERE id = ?';
-        db.query(query, [id], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results);
-        });
-    },
-
-    getAll: (categoria, callback) => {
-        let query = 'SELECT servicos.id, servicos.nome, servicos.descricao, servicos.preco, servicos.quantidade, categorias.nome AS categoria_nome FROM servicos JOIN categorias ON servicos.categoria = categorias.id';
-        
-        if (categoria) {
-            query += ' WHERE servicos.categoria = ?';
-        }
-    
-        db.query(query, [categoria], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results);
-        });
-    },
-    
-};
+Servicos.init({
+  nome: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  descricao: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  preco: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  quantidade: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  categoria: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'categorias',  // nome da tabela que referencia
+      key: 'id',
+    }
+  }
+}, {
+  sequelize,
+  modelName: 'Servicos',
+  tableName: 'servicos',
+  timestamps: true,
+});
 
 module.exports = Servicos;
